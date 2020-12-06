@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
-
+from stem.process import launch_tor_with_config
 from http.client import CannotSendRequest
 
 
@@ -35,6 +35,7 @@ class TorBrowser:
         self.binary = None # firefox
         self.tor_binary = None # tor binary
         self.options = None
+        self.tor_process = None
         self.webdriver = None
 
         self._initialize()
@@ -60,6 +61,8 @@ class TorBrowser:
             self.profile_path = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Browser', 'profile.default')))))
         # tor-browser_en-US/Browser/TorBrowser/Tor/tor
         self.tor_binary = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Tor', 'tor'))))
+        # tor-browser_en-US/Browser/TorBrowser/Data/Tor/torrc-defaults
+        self.torrc = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Tor', 'torrc-defaults')))))
 
     def _init_profile(self):
 
@@ -116,6 +119,7 @@ class TorBrowser:
 
     def _init_webdriver(self):
 
+        self.tor_process = launch_tor_with_config(config=self.torrc, tor_cmd=self.tor_binary)
         self.webdriver = webdriver.Firefox(firefox_profile=self.profile, firefox_binary=self.binary, timeout=60, capabilities=self.capabilities, executable_path=self.executable_path, options=self.options)
 
     def connect_url(self, url):
