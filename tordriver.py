@@ -62,7 +62,8 @@ class TorBrowser:
         # tor-browser_en-US/Browser/TorBrowser/Tor/tor
         self.tor_binary = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Tor', 'tor'))))
         # tor-browser_en-US/Browser/TorBrowser/Data/Tor/torrc-defaults
-        self.torrc = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Tor', 'torrc-defaults')))))
+        # self.torrc = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Tor', 'torrc-defaults')))))
+        self.torrc = '{"ControlPort": "9250", "SOCKSPort": "9251"}'
 
     def _init_profile(self):
 
@@ -152,6 +153,6 @@ class TorBrowser:
 if __name__ == '__main__':
 
     test_url = 'https://check.torproject.org'
-    tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US')
+    tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US', executable_path='./geckodriver')
     tor_browser.connect_url(test_url)
 
