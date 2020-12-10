@@ -1,22 +1,30 @@
 import os
 
 from selenium import webdriver
+from selenium.webdriver import firefox
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
+
+import stem.process
 from stem.process import launch_tor_with_config
+from stem.control import Controller
+
 from http.client import CannotSendRequest
+
+from log import logger
 
 
 class TorBrowser:
     '''
     Refactoring for 2020 12 version of Tor Browser Bundle
     '''
-    def __init__(self, browser_path, binary_path=None, profile_path=None, executable_path=None, socks_port=9050, control_port=9051, extensions=None, capabilities=None, headless=False):
+    def __init__(self, browser_path, binary_path=None, profile_path=None, executable_path=None, socks_port=9050, control_port=9051, extensions=None, capabilities=None, headless=False, capture_screen=False, url=None):
 
         assert browser_path is not None
 
@@ -30,6 +38,8 @@ class TorBrowser:
         self.extensions = extensions
         self.capabilities = capabilities
         self.headless = headless
+        self.capture_screen = capture_screen
+        self.url = url
 
         self.profile = None
         self.binary = None # firefox
@@ -45,6 +55,7 @@ class TorBrowser:
         self._init_browser()
         self.profile = FirefoxProfile(self.profile_path)
         self._init_profile()
+        self._init_canvas_permission()
         self._init_extensions()
         self._init_capabilities()
         self._init_binary()
@@ -62,39 +73,79 @@ class TorBrowser:
         # tor-browser_en-US/Browser/TorBrowser/Tor/tor
         self.tor_binary = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Tor', 'tor'))))
         # tor-browser_en-US/Browser/TorBrowser/Data/Tor/torrc-defaults
-        # self.torrc = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Tor', 'torrc-defaults')))))
-        self.torrc = '{"ControlPort": "9250", "SOCKSPort": "9251"}'
+        self.torrc = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Tor', 'torrc-defaults')))))
+        # self.torrc = '{"ControlPort": "9250", "SOCKSPort": "9251"}'
 
     def _init_profile(self):
 
         update_preference = self.profile.set_preference
         update_preference('browser.startup.page', '0')
         update_preference('browser.startup.homepage', 'about:newtab')
-        update_preference('extensions.torlauncher.promp_at_startup', 0)
-        update_preference('webdriver.load.strategy', 'normal')
-        update_preference('app.update.enabled', False)
-        update_preference('extensions.torbutton.versioncheck_enabled', False)
-        update_preference('extensions.torbutton.prompted_language', True)
+        update_preference('network.proxy.type', 1)
+        update_preference('network.proxy.socks', '127.0.0.1')
         update_preference('network.proxy.socks_port', self.socks_port)
-        update_preference('extensions.torbutton.socks_port', self.socks_port)
-        update_preference('extensions.torlauncher.control_port', self.control_port)
-        update_preference('extensions.torlauncher.start_tor', True)
-        update_preference('extensions.torbutton.block_dis', False)
-        update_preference('extensions.torbutton.custom.socks_host', '127.0.0.1')
-        update_preference('extensions.torbutton.custom.socks_port', self.socks_port)
-        update_preference('extensions.torbutton.inserted_button', True)
-        update_preference('extensions.torbutton.launch_warning', False)
-        update_preference('privacy.spoof_english', 2)
-        update_preference('extensions.torbutton.loglevel', 2)
-        update_preference('extensions.torbutton.logmethod', 0)
-        update_preference('extensions.torbutton.settings_method', 'custom')
-        update_preference('extensions.torbutton.use_privoxy', False)
-        update_preference('extensions.torlauncher.control_port', self.control_port)
-        update_preference('extensions.torlauncher.loglevel', 2)
-        update_preference('extensions.torlauncher.logmethod', 0)
-        update_preference('extensions.torlauncher.prompt_at_startup', False)
+        update_preference('extensions.torlauncher.promp_at_startup', 0)
+        update_preference('network.http.use-cache', False)
+        update_preference('webdriver.load.strategy', 'conservative')
+        update_preference('extensions.torlauncher.start_tor', False)
+        update_preference('extensions.torbutton.versioncheck_enabled', False)
+        update_preference('permissions.memory_only', False)
+        # update_preference('webdriver.load.strategy', 'normal')
+        # update_preference('app.update.enabled', False)
+        # update_preference('extensions.torbutton.versioncheck_enabled', False)
+        # update_preference('extensions.torbutton.prompted_language', True)
+        # update_preference('extensions.torbutton.socks_port', self.socks_port)
+        # update_preference('extensions.torlauncher.control_port', self.control_port)
+        # update_preference('extensions.torlauncher.start_tor', True)
+        # update_preference('extensions.torbutton.block_dis', False)
+        # update_preference('extensions.torbutton.custom.socks_host', '127.0.0.1')
+        # update_preference('extensions.torbutton.custom.socks_port', self.socks_port)
+        # update_preference('extensions.torbutton.inserted_button', True)
+        # update_preference('extensions.torbutton.launch_warning', False)
+        # update_preference('privacy.spoof_english', 2)
+        # update_preference('extensions.torbutton.loglevel', 2)
+        # update_preference('extensions.torbutton.logmethod', 0)
+        # update_preference('extensions.torbutton.settings_method', 'custom')
+        # update_preference('extensions.torbutton.use_privoxy', False)
+        # update_preference('extensions.torlauncher.control_port', self.control_port)
+        # update_preference('extensions.torlauncher.loglevel', 2)
+        # update_preference('extensions.torlauncher.logmethod', 0)
+        # update_preference('extensions.torlauncher.prompt_at_startup', False)
 
         self.profile.update_preferences()
+
+    def _init_canvas_permission(self):
+        '''
+        Create a permission DB and add exception for the canvas image extraction.
+        Otherwise screenshots taken by Selenium will be just blank images due to
+        canvas fingerprinting defense in Tor Browser Bundle.
+        '''
+        if self.capture_screen:
+            import sqlite3
+            from tld import get_tld
+
+            connection = sqlite3.connect
+            permission_db = connection(os.path.join(self.profile_path, 'permissions.sqlite'))
+            cursor = permission_db.cursor()
+
+            # http://mxr.mozilla.org/mozilla-esr31/source/build/automation.py.in
+            cursor.execute("PRAGMA user_version=3")
+            cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
+                id INTEGER PRIMARY KEY,
+                host TEXT,
+                type TEXT,
+                permission INTEGER,
+                expireType INTEGER,
+                expireTime INTEGER,
+                appId INTEGER,
+                isInBrowserElement INTEGER)""")
+
+            domain = get_tld(self.url)
+            logger.debug('Adding canvas/extractData permission for %s' % domain)
+            query = """INSERT INTO 'moz_hosts' VALUES (NULL, '%s', 'canvas/extractData', 1, 0, 0, 0, 0);""" % domain
+            cursor.execute(query)
+            permission_db.commit()
+            cursor.close()
 
     def _init_extensions(self):
 
@@ -105,7 +156,9 @@ class TorBrowser:
     def _init_capabilities(self):
 
         if self.capabilities is None:
-            self.capabilities = {"marionette": True, "capabilities": {"alwaysMatch": {"moz:firefoxOptions": {"log": {"level": "info"}}}}}
+            self.capabilities = DesiredCapabilities.FIREFOX
+            self.capabilities.update({'handlesAlerts': True, 'databaseEnabled': True, 'javascriptEnabled': True, 'browserConnectionEnabled': True})
+            # self.capabilities = {"marionette": True, "capabilities": {"alwaysMatch": {"moz:firefoxOptions": {"log": {"level": "info"}}}}}
 
     def _init_binary(self):
 
@@ -120,32 +173,27 @@ class TorBrowser:
 
     def _init_webdriver(self):
 
-        self.tor_process = launch_tor_with_config(config=self.torrc, tor_cmd=self.tor_binary)
+        # self.tor_process = launch_tor_with_config(config=self.torrc, tor_cmd=self.tor_binary)
         self.webdriver = webdriver.Firefox(firefox_profile=self.profile, firefox_binary=self.binary, timeout=60, capabilities=self.capabilities, executable_path=self.executable_path, options=self.options)
 
-    def connect_url(self, url):
+    def connect_url(self):
 
-        self.webdriver.get(url)
+        self.webdriver.get(self.url)
         WebDriverWait(self.webdriver, timeout=30).until(expected_conditions.presence_of_element_located((By.TAG_NAME, 'body')))
 
     def close(self):
-
         try:
             self.webdriver.quit()
-        except (CannotSendRequest, AttributeError, WebDriverException):
-            try:
-                if self.webdriver.w3c:
-                    self.webdriver.service.stop()
-                if hasattr(self.webdriver, "binary"):
-                    self.binary.kill()
-            except Exception as e:
-                print("[WARNING] Exception while close Tor Browser: %s", e)
+        except CannotSendRequest:
+            logger.error('CannotSendRequest while quitting TorBrowserDriver')
+            self.binary.kill()
+        except Exception as e:
+            logger.error('Exception while quitting TorBrowserDriver', e)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-
         self.close()
 
 
