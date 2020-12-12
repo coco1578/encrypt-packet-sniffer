@@ -2,18 +2,14 @@ import os
 
 from selenium import webdriver
 from selenium.webdriver import firefox
-from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions
-
-import stem.process
-from stem.process import launch_tor_with_config
-from stem.control import Controller
 
 from http.client import CannotSendRequest
 
@@ -43,9 +39,9 @@ class TorBrowser:
 
         self.profile = None
         self.binary = None # firefox
-        self.tor_binary = None # tor binary
+        # self.tor_binary = None # tor binary
         self.options = None
-        self.tor_process = None
+        # self.tor_process = None
         self.webdriver = None
 
         self._initialize()
@@ -78,18 +74,17 @@ class TorBrowser:
 
     def _init_profile(self):
 
-        update_preference = self.profile.set_preference
-        update_preference('browser.startup.page', '0')
-        update_preference('browser.startup.homepage', 'about:newtab')
-        update_preference('network.proxy.type', 1)
-        update_preference('network.proxy.socks', '127.0.0.1')
-        update_preference('network.proxy.socks_port', self.socks_port)
-        update_preference('extensions.torlauncher.promp_at_startup', 0)
-        update_preference('network.http.use-cache', False)
-        update_preference('webdriver.load.strategy', 'conservative')
-        update_preference('extensions.torlauncher.start_tor', False)
-        update_preference('extensions.torbutton.versioncheck_enabled', False)
-        update_preference('permissions.memory_only', False)
+        self.profile.set_preference('browser.startup.page', '0')
+        self.profile.set_preference('browser.startup.homepage', 'about:newtab')
+        self.profile.set_preference('network.proxy.type', 1)
+        self.profile.set_preference('network.proxy.socks', '127.0.0.1')
+        self.profile.set_preference('network.proxy.socks_port', self.socks_port)
+        self.profile.set_preference('extensions.torlauncher.promp_at_startup', 0)
+        self.profile.set_preference('network.http.use-cache', False)
+        self.profile.set_preference('webdriver.load.strategy', 'conservative')
+        self.profile.set_preference('extensions.torlauncher.start_tor', False)
+        self.profile.set_preference('extensions.torbutton.versioncheck_enabled', False)
+        self.profile.set_preference('permissions.memory_only', False)
         # update_preference('webdriver.load.strategy', 'normal')
         # update_preference('app.update.enabled', False)
         # update_preference('extensions.torbutton.versioncheck_enabled', False)
@@ -201,6 +196,6 @@ class TorBrowser:
 if __name__ == '__main__':
 
     test_url = 'https://check.torproject.org'
-    tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US', executable_path='./geckodriver')
+    tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US', executable_path='./geckodriver', url=test_url)
     tor_browser.connect_url(test_url)
 
