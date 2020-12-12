@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from selenium import webdriver
 from selenium.webdriver import firefox
@@ -14,6 +15,73 @@ from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from http.client import CannotSendRequest
 
 from log import logger
+
+
+class TorController:
+
+    def __init__(self):
+
+        self.service = 'tor'
+
+        self._init_tor()
+
+    def _init_tor(self):
+
+        result = self._check_tor_is_run()
+        if result == 'active':
+            self.restart()
+        elif result == 'inactive':
+            self.start()
+
+    def _check_tor_is_run(self):
+
+        process = subprocess.Popen(['systemctl', 'is-active', self.service], stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        output = output.decode('utf-8').strip()
+
+        if output == 'inactive':
+            return 'inactive'
+        elif output == 'active':
+            return 'active'
+        elif error is not None:
+            return 'error'
+        else: # unknown error
+            return 'error'
+
+    def start(self):
+
+        process = subprocess.Popen(['systemctl', 'start', self.service], stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        if output == b'':
+            logger.info('Tor process start')
+            return True
+        else:
+            logger.warning('Tor process cannot stop. Program will be Exit.')
+            # return False
+            exit(1)
+
+    def stop(self):
+
+        process = subprocess.Popen(['systemctl', 'stop', self.service], stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        if output == b'':
+            logger.info('Tor process stop')
+            return True
+        else:
+            logger.warning('Tor process cannot stop')
+            return False
+
+    def restart(self):
+
+        process = subprocess.Popen(['systemctl', 'restart', self.service], stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        if output == b'':
+            logger.info('Tor process restart')
+            return True
+        else:
+            logger.warning('Tor process cannot restart. Program will be Exit.')
+            # return False
+            exit(1)
 
 
 class TorBrowser:
@@ -39,10 +107,9 @@ class TorBrowser:
 
         self.profile = None
         self.binary = None # firefox
-        # self.tor_binary = None # tor binary
         self.options = None
-        # self.tor_process = None
         self.webdriver = None
+        self.tor_controller = TorController() # Start tor process..
 
         self._initialize()
 
@@ -66,11 +133,6 @@ class TorBrowser:
         if self.profile_path is None:
             # tor-browser_en-US/Browser/TorBrowser/Data/Browser/profile.default
             self.profile_path = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Browser', 'profile.default')))))
-        # tor-browser_en-US/Browser/TorBrowser/Tor/tor
-        self.tor_binary = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Tor', 'tor'))))
-        # tor-browser_en-US/Browser/TorBrowser/Data/Tor/torrc-defaults
-        self.torrc = os.path.join(self.browser_path, os.path.join('Browser', os.path.join('TorBrowser', os.path.join('Data', os.path.join('Tor', 'torrc-defaults')))))
-        # self.torrc = '{"ControlPort": "9250", "SOCKSPort": "9251"}'
 
     def _init_profile(self):
 
@@ -168,7 +230,6 @@ class TorBrowser:
 
     def _init_webdriver(self):
 
-        # self.tor_process = launch_tor_with_config(config=self.torrc, tor_cmd=self.tor_binary)
         self.webdriver = webdriver.Firefox(firefox_profile=self.profile, firefox_binary=self.binary, timeout=60, capabilities=self.capabilities, executable_path=self.executable_path, options=self.options)
 
     def connect_url(self):
@@ -178,6 +239,7 @@ class TorBrowser:
 
     def close(self):
         try:
+            self.tor_controller.stop()
             self.webdriver.quit()
         except CannotSendRequest:
             logger.error('CannotSendRequest while quitting TorBrowserDriver')
@@ -197,5 +259,5 @@ if __name__ == '__main__':
 
     test_url = 'https://check.torproject.org'
     tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US', executable_path='./geckodriver', url=test_url)
-    tor_browser.connect_url(test_url)
+    tor_browser.connect_url()
 
