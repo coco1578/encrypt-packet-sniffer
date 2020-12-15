@@ -14,11 +14,14 @@ class Sniffer:
         self.capture_screen = capture_screen
         self.packet_capture_process = Capture(config)
 
-    def sniff(self, url): # sniff just one website
+    def sniff(self, url, save_path): # sniff just one website
 
         logger.info('Sniffing starts')
 
         try:
+            self.packet_capture_process.init_capture_program(save_path)
+
+            # start sniff encrypted packet from browser
             start_time = time.time()
             self.packet_capture_process.start()
             self.tbb_driver.connect_url(url)
@@ -30,7 +33,7 @@ class Sniffer:
 
             if self.capture_screen is True:
                 self.tbb_driver.init_canvas_permission(url)
-                self.tbb_driver.take_screenshot(url)
+                self.tbb_driver.take_screenshot(url, save_path)
 
         except KeyboardInterrupt:
             logger.info('Program stop')
