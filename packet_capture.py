@@ -1,4 +1,5 @@
 import os
+import time
 import subprocess
 
 from log import logger
@@ -24,7 +25,6 @@ class Capture:
         self.process = None
 
         self._init_capture_setup()
-        self._init_capture_program()
 
     def _init_capture_setup(self):
 
@@ -35,9 +35,12 @@ class Capture:
         self.file_size = self.config['CaptureProgram']['file_size']
         self.network_adaptor = self.config['CaptureProgram']['adaptor']
 
-    def _init_capture_program(self):
+    def init_capture_program(self, save_path):
 
         # Will be support tcpdump & tshark
+        if save_path is not None:
+            self.save_path = os.path.join(save_path, time.strftime('%Y-%m-%d_%H_%M_%S'))
+
         self.command = '{} -a duration:{} -a filesize:{} -i {} -s 0 -f \'{}\' -w {}'.format(self.packet_capture_program, self.duration, self.file_size, self.network_adaptor, self.packet_capture_filter, self.save_path) # dumpcap
         logger.info('Packet Capture command %s' % self.command)
 
