@@ -245,11 +245,14 @@ class TorBrowser:
         permission_db.commit()
         cursor.close()
 
-    def take_screenshot(self, url):
-        # TODO: MAKE DIR AND LOG
-        file_name = 'screenshot.png'
-        file_path = None
-        self.webdriver.get_screenshot_as_file(file_path)
+    def take_screenshot(self, url, save_path):
+
+        if save_path is not None:
+            save_path = os.path.join(save_path, 'screenshot.png')
+        else:
+            save_path = 'screenshot.png'
+
+        self.webdriver.get_screenshot_as_file(save_path)
 
     def __enter__(self):
         return self
