@@ -1,8 +1,8 @@
 import os
+import time
 import subprocess
 
 from selenium import webdriver
-from selenium.webdriver import firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.firefox.options import Options
@@ -171,39 +171,6 @@ class TorBrowser:
 
         self.profile.update_preferences()
 
-    def _init_canvas_permission(self):
-        '''
-        Create a permission DB and add exception for the canvas image extraction.
-        Otherwise screenshots taken by Selenium will be just blank images due to
-        canvas fingerprinting defense in Tor Browser Bundle.
-        '''
-        if self.capture_screen:
-            import sqlite3
-            from tld import get_tld
-
-            connection = sqlite3.connect
-            permission_db = connection(os.path.join(self.profile_path, 'permissions.sqlite'))
-            cursor = permission_db.cursor()
-
-            # http://mxr.mozilla.org/mozilla-esr31/source/build/automation.py.in
-            cursor.execute("PRAGMA user_version=3")
-            cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
-                id INTEGER PRIMARY KEY,
-                host TEXT,
-                type TEXT,
-                permission INTEGER,
-                expireType INTEGER,
-                expireTime INTEGER,
-                appId INTEGER,
-                isInBrowserElement INTEGER)""")
-
-            domain = get_tld(self.url)
-            logger.debug('Adding canvas/extractData permission for %s' % domain)
-            query = """INSERT INTO 'moz_hosts' VALUES (NULL, '%s', 'canvas/extractData', 1, 0, 0, 0, 0);""" % domain
-            cursor.execute(query)
-            permission_db.commit()
-            cursor.close()
-
     def _init_extensions(self):
 
         if self.extensions is not None:
@@ -215,7 +182,6 @@ class TorBrowser:
         if self.capabilities is None:
             self.capabilities = DesiredCapabilities.FIREFOX
             self.capabilities.update({'handlesAlerts': True, 'databaseEnabled': True, 'javascriptEnabled': True, 'browserConnectionEnabled': True})
-            # self.capabilities = {"marionette": True, "capabilities": {"alwaysMatch": {"moz:firefoxOptions": {"log": {"level": "info"}}}}}
 
     def _init_binary(self):
 
@@ -232,9 +198,9 @@ class TorBrowser:
 
         self.webdriver = webdriver.Firefox(firefox_profile=self.profile, firefox_binary=self.binary, timeout=60, capabilities=self.capabilities, executable_path=self.executable_path, options=self.options)
 
-    def connect_url(self):
+    def connect_url(self, url):
 
-        self.webdriver.get(self.url)
+        self.webdriver.get(url)
         WebDriverWait(self.webdriver, timeout=30).until(expected_conditions.presence_of_element_located((By.TAG_NAME, 'body')))
 
     def close(self):
@@ -247,6 +213,44 @@ class TorBrowser:
         except Exception as e:
             logger.error('Exception while quitting TorBrowserDriver', e)
 
+    def init_canvas_permission(self, url):
+        '''
+        Create a permission DB and add exception for the canvas image extraction.
+        Otherwise screenshots taken by Selenium will be just blank images due to
+        canvas fingerprinting defense in Tor Browser Bundle.
+        '''
+        import sqlite3
+        from tld import get_tld
+
+        connection = sqlite3.connect
+        permission_db = connection(os.path.join(self.profile_path, 'permissions.sqlite'))
+        cursor = permission_db.cursor()
+
+        # http://mxr.mozilla.org/mozilla-esr31/source/build/automation.py.in
+        cursor.execute("PRAGMA user_version=3")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
+            id INTEGER PRIMARY KEY,
+            host TEXT,
+            type TEXT,
+            permission INTEGER,
+            expireType INTEGER,
+            expireTime INTEGER,
+            appId INTEGER,
+            isInBrowserElement INTEGER)""")
+
+        domain = get_tld(url)
+        logger.debug('Adding canvas/extractData permission for %s' % domain)
+        query = """INSERT INTO 'moz_hosts' VALUES (NULL, '%s', 'canvas/extractData', 1, 0, 0, 0, 0);""" % domain
+        cursor.execute(query)
+        permission_db.commit()
+        cursor.close()
+
+    def take_screenshot(self, url):
+        # TODO: MAKE DIR AND LOG
+        file_name = 'screenshot.png'
+        file_path = None
+        self.webdriver.get_screenshot_as_file(file_path)
+
     def __enter__(self):
         return self
 
@@ -258,6 +262,6 @@ class TorBrowser:
 if __name__ == '__main__':
 
     test_url = 'https://check.torproject.org'
-    tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US', executable_path='./geckodriver', url=test_url)
-    tor_browser.connect_url()
+    tor_browser = TorBrowser(browser_path='/home/parallels/tor-browser_en-US', executable_path='./geckodriver')
+    tor_browser.connect_url(test_url)
 
