@@ -33,7 +33,7 @@ class Sniffer:
 
             if self.capture_screen is True:
                 self.tbb_driver.init_canvas_permission(url)
-                self.tbb_driver.take_screenshot(url, save_path)
+                self.tbb_driver.take_screenshot(save_path)
 
         except KeyboardInterrupt:
             logger.info('Program stop')
