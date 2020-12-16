@@ -52,7 +52,7 @@ def run(config, args):
     sniffer = Sniffer(tbb_driver=tor_driver, config=config, capture_screen=capture_screen)
 
     if args.batch:
-        run_batch(sniffer, url_list, batch_size, total_size, save_path)
+        run_batch(sniffer, batch_size, total_size, url_list, save_path)
     else:
         num_of_repeat = args.num
         run_sequence(sniffer, url_list, num_of_repeat, save_path)
