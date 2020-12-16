@@ -118,7 +118,6 @@ class TorBrowser:
         self._init_browser()
         self.profile = FirefoxProfile(self.profile_path)
         self._init_profile()
-        self._init_canvas_permission()
         self._init_extensions()
         self._init_capabilities()
         self._init_binary()
@@ -245,7 +244,7 @@ class TorBrowser:
         permission_db.commit()
         cursor.close()
 
-    def take_screenshot(self, url, save_path):
+    def take_screenshot(self, save_path):
 
         if save_path is not None:
             save_path = os.path.join(save_path, 'screenshot.png')
