@@ -33,9 +33,11 @@ def run(config, args):
     url_list = np.random.permutation(url_list).tolist() # Shuffle url list
 
     browser_path = config['TorBrowser']['browser_path']
-    socks_port = config['TorBrowser']['socks_port']
-    control_port = config['TorBrowser']['control_port']
+    socks_port = int(config['TorBrowser']['socks_port'])
+    control_port = int(config['TorBrowser']['control_port'])
     headless = config['TorBrowser']['headless']
+    executable_path = config['TorBrowser']['executable_path']
+    capture_screen = config['TorBrowser']['capture_screen']
 
     # default save_path is current_directory/result
     # batch directory save_path/url/epoch/batch
@@ -43,11 +45,11 @@ def run(config, args):
     save_path = config['CaptureProgram']['save_path']
     save_path = os.path.join(os.getcwd(), save_path)
 
-    batch_size = config['Batch']['batch_size']
-    total_size = config['Batch']['total_size']
+    batch_size = int(config['Batch']['batch_size'])
+    total_size = int(config['Batch']['total_size'])
 
-    tor_driver = TorBrowser(browser_path=browser_path, socks_port=socks_port, control_port=control_port, headless=headless)
-    sniffer = Sniffer(tbb_driver=tor_driver, config_path=config)
+    tor_driver = TorBrowser(browser_path=browser_path, socks_port=socks_port, executable_path=executable_path, control_port=control_port, headless=headless)
+    sniffer = Sniffer(tbb_driver=tor_driver, config=config, capture_screen=capture_screen)
 
     if args.batch:
         run_batch(sniffer, url_list, batch_size, total_size, save_path)
@@ -83,11 +85,9 @@ def main():
 
     logger.info("Sniffing Program start")
 
-    config_parser = configparser.ConfigParser()
-    config = config_parser.read('config.ini')
+    config = configparser.ConfigParser()
+    config.read('config.ini')
     logger.info('Parse config.ini')
-
-    print(os.getcwd())
 
     args = parse_args()
     logger.info('Parse argument')
