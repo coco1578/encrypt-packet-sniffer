@@ -36,7 +36,7 @@ def run(config, args):
     browser_path = config['TorBrowser']['browser_path']
     socks_port = int(config['TorBrowser']['socks_port'])
     control_port = int(config['TorBrowser']['control_port'])
-    headless = bool(config['TorBrowser']['headless'])
+    headless = config['TorBrowser'].getboolean('headless')
     executable_path = config['TorBrowser']['executable_path']
     capture_screen = config['TorBrowser']['capture_screen']
 
