@@ -31,7 +31,7 @@ Wireshark
 1. Install Wireshark
     - In terminal, enter this code to chagne wireshark rule `sudo dpkg-reconfigure wireshark-common`
     - Select Yes.
-    - ![Wireshark Image]()
+    - ![Wireshark Image](https://user-images.githubusercontent.com/25210326/102443317-c07b9380-4069-11eb-9922-d7597df00e9e.png)
     - In terminal, enter this code `sudo usermod -a -G wireshark $USER`
     - Reboot Ubuntu Desktop
 
