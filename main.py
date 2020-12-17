@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 import configparser
 import numpy as np
@@ -47,18 +48,21 @@ def run(config, args):
 
     batch_size = int(config['Batch']['batch_size'])
     total_size = int(config['Batch']['total_size'])
+    sleep_batch = int(config['Batch']['sleep_batch'])
+    sleep_url = int(config['Batch']['sleep_url'])
+    sleep_epoch = int(config['Batch']['sleep_epoch'])
 
     tor_driver = TorBrowser(browser_path=browser_path, socks_port=socks_port, executable_path=executable_path, control_port=control_port, headless=headless)
     sniffer = Sniffer(tbb_driver=tor_driver, config=config, capture_screen=capture_screen)
 
     if args.batch:
-        run_batch(sniffer, batch_size, total_size, url_list, save_path)
+        run_batch(sniffer, batch_size, total_size, url_list, save_path, sleep_batch, sleep_url, sleep_epoch)
     else:
         num_of_repeat = args.num
-        run_sequence(sniffer, url_list, num_of_repeat, save_path)
+        run_sequence(sniffer, url_list, num_of_repeat, save_path, sleep_batch, sleep_epoch)
 
 
-def run_batch(sniffer, batch_size, total_size, url_list, save_path):
+def run_batch(sniffer, batch_size, total_size, url_list, save_path, sleep_batch, sleep_url, sleep_epoch):
 
     logger.info('Sniff using batch')
     for epoch in range(total_size // batch_size): # epoch
@@ -67,9 +71,12 @@ def run_batch(sniffer, batch_size, total_size, url_list, save_path):
                 directory_name = make_batch_dir(save_path, url, epoch, batch)
                 logger.info('Batch - [%d/%d] - Epoch - [%d/%d] - URL - %s' % (batch, batch_size, epoch, total_size // batch_size, url))
                 sniffer.sniff(url, directory_name)
+                time.sleep(sleep_batch)
+            time.sleep(sleep_url)
+        time.sleep(sleep_epoch)
 
 
-def run_sequence(sniffer, url_list, num_of_repeat, save_path):
+def run_sequence(sniffer, url_list, num_of_repeat, save_path, sleep_batch, sleep_epoch):
 
     logger.info('Sniff using sequence')
     for epoch in range(num_of_repeat):
@@ -77,6 +84,8 @@ def run_sequence(sniffer, url_list, num_of_repeat, save_path):
             directory_name = make_sequence_dir(save_path, url, epoch)
             logger.info('Epoch - [%d/%d] - URL - %s' % (epoch, num_of_repeat, url))
             sniffer.sniff(url, directory_name)
+            time.sleep(sleep_batch)
+        time.sleep(sleep_epoch)
 
     return 0
 
