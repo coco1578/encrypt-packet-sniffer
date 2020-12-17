@@ -1,6 +1,9 @@
+import os
 import logging
 import configparser
+
 from time import strftime
+from utils import make_dir
 
 
 class Logger:
@@ -70,6 +73,7 @@ class Logger:
 
 parser = configparser.ConfigParser()
 parser.read('config.ini')
+log_dir = parser['Logger']['log_dir']
 file_name = parser['Logger']['file_name']
 log_type = parser['Logger']['log_type']
 log_level = parser['Logger']['log_level']
@@ -79,7 +83,9 @@ try:
     log_level = log_dict[log_level]
 except KeyError:
     log_level = log_dict['DEBUG']
-
+file_path = os.path.join(log_dir, strftime('%Y-%m-%d_%H_%M_%S'))
+make_dir(file_path)
+file_name = os.path.join(file_path, file_name)
 log = Logger(file_name=file_name, log_type=log_type, level=log_level)
 logger = log.get_logger()
 
