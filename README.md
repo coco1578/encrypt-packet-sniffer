@@ -37,6 +37,8 @@ Wireshark
 
 2. Download Tor
     - `sudo apt-get install tor`
+    - Uncomment SocksPort, ControlPort in /etc/tor/torrc file.
+    - <u>**This SocksPort and ControlPort should be matched with config.ini socks_port, control_port**</u>
 
 3. Download the Tor Browser Bundle
     - extract it whatever you want
@@ -54,6 +56,9 @@ Wireshark
     - **To capture pure encyrpted packet** we need to remove background network traffic.
     - [how to disable ubuntu background network traffic](https://help.ubuntu.com/community/AutomaticConnections)
     - Recommend to change MTU size 1500 `sudo ifconfig <network interface> mut 1500`
+
+**Important Setup (Only works on remote session)**
+- When you are using remote session, Add `export DISPLAY=:0` in `bashrc`.
 
 
 ## Usage
