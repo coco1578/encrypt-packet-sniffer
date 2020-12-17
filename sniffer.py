@@ -1,4 +1,6 @@
+import os
 import time
+import json
 
 from log import logger
 from packet_capture import Capture
@@ -6,13 +8,16 @@ from packet_capture import Capture
 
 class Sniffer:
 
-    def __init__(self, tbb_driver, config, capture_screen):
+    def __init__(self, tbb_driver, config, capture_screen, sniff_done_dict):
         assert tbb_driver is not None
 
         self.tbb_driver = tbb_driver
         self.config = config
         self.capture_screen = capture_screen
         self.packet_capture_process = Capture(config)
+        self.json_save_path = config['CaptureProgram']['save_path']
+        self.sniff_done_dict = sniff_done_dict
+        self.json_file_name = os.path.join(self.json_save_path, time.strftime('%Y-%m-%d_%H_%M_%S') + '.json')
 
     def sniff(self, url, save_path): # sniff just one website
 
@@ -30,6 +35,11 @@ class Sniffer:
 
             elasped_time = end_time - start_time
             logger.info('Capture packet %s times' % elasped_time)
+
+            # Is this best way to save sniff done website..?
+            self.sniff_done_dict[url] += 1
+            with open(self.json_file_name, 'w') as fd:
+                json.dump(self.sniff_done_dict, fd)
 
             if self.capture_screen is True:
                 self.tbb_driver.init_canvas_permission(url)

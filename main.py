@@ -32,6 +32,7 @@ def run(config, args):
 
     url_list = np.loadtxt(args.url, delimiter='\n', dtype=str)
     url_list = np.random.permutation(url_list).tolist() # Shuffle url list
+    sniff_done_dict = {url: 0 for url in url_list} # Record sniff result
 
     browser_path = config['TorBrowser']['browser_path']
     socks_port = int(config['TorBrowser']['socks_port'])
@@ -53,7 +54,7 @@ def run(config, args):
     sleep_epoch = int(config['Batch']['sleep_epoch'])
 
     tor_driver = TorBrowser(browser_path=browser_path, socks_port=socks_port, executable_path=executable_path, control_port=control_port, headless=headless)
-    sniffer = Sniffer(tbb_driver=tor_driver, config=config, capture_screen=capture_screen)
+    sniffer = Sniffer(tbb_driver=tor_driver, config=config, capture_screen=capture_screen, sniff_done_dict=sniff_done_dict)
 
     if args.batch:
         run_batch(sniffer, batch_size, total_size, url_list, save_path, sleep_batch, sleep_url, sleep_epoch)
