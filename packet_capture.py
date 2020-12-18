@@ -41,7 +41,7 @@ class Capture:
         if save_path is not None:
             self.save_path = os.path.join(save_path, time.strftime('%Y-%m-%d_%H_%M_%S' + '.pcap'))
 
-        self.command = '{} -a duration:{} -a filesize:{} -i {} -s 0 -f \'{}\' -w {}'.format(self.packet_capture_program, self.duration, self.file_size, self.network_adaptor, self.packet_capture_filter, self.save_path) # dumpcap
+        self.command = '{} -P -a duration:{} -a filesize:{} -i {} -s 0 -f \'{}\' -w {}'.format(self.packet_capture_program, self.duration, self.file_size, self.network_adaptor, self.packet_capture_filter, self.save_path) # dumpcap
         logger.info('Packet Capture command %s' % self.command)
 
     def start(self):
