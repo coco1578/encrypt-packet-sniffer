@@ -110,11 +110,9 @@ Sequence mode: `python3 main.py -u example.txt -b False`
 ---
 When you run the program. **You need to enter root password to start tor service**
 
-
-
-
 ## Will be updated
 
 ---
 * Make a shell scrpit to setup this sniffer program.
 * <del>Support headless mode.<del/>
+* Support continuation sniffing if exeception occur.
