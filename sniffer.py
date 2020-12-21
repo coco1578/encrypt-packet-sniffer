@@ -4,6 +4,7 @@ import json
 
 from log import logger
 from packet_capture import Capture
+from selenium.common.exceptions import WebDriverException
 
 
 class Sniffer:
@@ -18,38 +19,56 @@ class Sniffer:
         self.json_save_path = config['CaptureProgram']['save_path']
         self.sniff_done_dict = sniff_done_dict
         self.json_file_name = os.path.join(self.json_save_path, time.strftime('%Y-%m-%d_%H_%M_%S') + '.json')
+        self.black_list = dict()
+        self.black_list_count = int(config['CaptureProgram']['black_count'])
+    
 
     def sniff(self, url, save_path): # sniff just one website
 
         logger.info('Sniffing starts')
 
         try:
-            self.packet_capture_process.init_capture_program(save_path)
+            
+            if url not in self.black_list or self.black_list[url] < self.black_list_count:
+                self.packet_capture_process.init_capture_program(save_path)
 
-            # start sniff encrypted packet from browser
-            start_time = time.time()
-            self.packet_capture_process.start()
-            self.tbb_driver.connect_url(url)
-            self.packet_capture_process.stop()
-            end_time = time.time()
+                # start sniff encrypted packet from browser
+                start_time = time.time()
+                self.packet_capture_process.start()
+                self.tbb_driver.connect_url(url)
+                self.packet_capture_process.stop()
+                end_time = time.time()
 
-            elasped_time = end_time - start_time
-            logger.info('Capture packet %s times' % elasped_time)
+                elasped_time = end_time - start_time
+                logger.info('Capture packet %s times' % elasped_time)
 
-            # Is this best way to save sniff done website..?
-            self.sniff_done_dict[url] += 1
-            with open(self.json_file_name, 'w') as fd:
-                json.dump(self.sniff_done_dict, fd)
+                # Is this best way to save sniff done website..?
+                self.sniff_done_dict[url] += 1
+                with open(self.json_file_name, 'w') as fd:
+                    json.dump(self.sniff_done_dict, fd)
 
-            if self.capture_screen is True:
-                self.tbb_driver.init_canvas_permission(url)
-                self.tbb_driver.take_screenshot(save_path)
+                if self.capture_screen is True:
+                    self.tbb_driver.init_canvas_permission(url)
+                    self.tbb_driver.take_screenshot(save_path)
+            else:
+                logger.warn('%s url is in the black list.' % url)
 
         except KeyboardInterrupt:
             logger.info('Program stop')
             self.packet_capture_process.stop()
             self.packet_capture_process.remove()
             exit(1)
+
+        except WebDriverException as we:
+            logger.info(we)
+            self.packet_capture_process.stop()
+            self.packet_capture_process.remove()
+
+            # Add url in the black list (Page not found. Network error. etc)
+            if url not in self.black_list:
+                self.black_list[url] = 1
+            else:
+                self.black_list[url] += 1
 
         except Exception as e:
             logger.error('Exception while sniffing. Remove captured packet')

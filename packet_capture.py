@@ -52,9 +52,10 @@ class Capture:
         except subprocess.SubprocessError:
             self.stop()
             logger.error('Subprocess error')
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as cpe:
             self.stop()
             logger.error('Call dumpcap error')
+            logger.error(cpe)
 
     def stop(self):
 
@@ -63,5 +64,8 @@ class Capture:
 
     def remove(self):
 
-        remove_command = 'rm -rf %s' % self.save_path
-        remove_process = subprocess.Popen(remove_command, stdout=subprocess.PIPE)
+        try:
+            remove_command = 'rm -rf %s' % self.save_path
+            remove_process = subprocess.Popen(remove_command, stdout=subprocess.PIPE)
+        except FileNotFoundError as ffe:
+            logger.error(ffe)
