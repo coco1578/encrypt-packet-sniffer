@@ -103,6 +103,7 @@ https://www.google.com
 4. Run the `main.py`
 Batch mode: `python3 main.py -u example.txt -b True`
 Sequence mode: `python3 main.py -u example.txt -b False`
+Remain mode: `python3 main.py -r True -j result/2020-12-22_13_10_00.json`
 
 5. See the captured packet in the `save_path` folder
 
