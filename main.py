@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import argparse
 import configparser
@@ -17,11 +18,18 @@ def parse_args():
     parser.add_argument('--url', '-u', type=str, help='url list want to get a encrypted packet')
     parser.add_argument('--batch', '-b', type=bool, help='If true sniff url list using batch size else just loop num argument')
     parser.add_argument('--num', '-n', type=int, help='If batch is false, this argument must need to sniff website')
+    parser.add_argument('--remain', '-r', type=bool, help='Recapture the reamining website.')
+    parser.add_argument('--json', '-j', type=str, help='reamin json path')
 
     args = parser.parse_args()
 
     # check num argument exists when batch args is False
     if args.batch is False and args.num is None:
+        parser.print_help()
+        exit(1)
+
+    # check remain and json arguemnt
+    if args.remain is True and args.json is None:
         parser.print_help()
         exit(1)
 
@@ -56,11 +64,22 @@ def run(config, args):
     tor_driver = TorBrowser(browser_path=browser_path, socks_port=socks_port, executable_path=executable_path, control_port=control_port, headless=headless)
     sniffer = Sniffer(tbb_driver=tor_driver, config=config, capture_screen=capture_screen, sniff_done_dict=sniff_done_dict)
 
-    if args.batch:
+    if args.batch is True:
         run_batch(sniffer, batch_size, total_size, url_list, save_path, sleep_batch, sleep_url, sleep_epoch)
-    else:
+    elif args.batch is False:
         num_of_repeat = args.num
         run_sequence(sniffer, url_list, num_of_repeat, save_path, sleep_batch, sleep_epoch)
+    elif args.reamin is True:
+        try:
+            remain_json = open(args.json)
+            remain_json = json.load(remain_json)
+        except:
+            logger.error('File not existed')
+            exit(1)
+        run_remain(sniffer, batch_size, total_size, remain_json, save_path, sleep_batch, sleep_url, sleep_epoch)
+    else:
+        logger.error('Wrong argument is inserted. Please read argument help.')
+        exit(1)
 
 
 def run_batch(sniffer, batch_size, total_size, url_list, save_path, sleep_batch, sleep_url, sleep_epoch):
@@ -89,6 +108,24 @@ def run_sequence(sniffer, url_list, num_of_repeat, save_path, sleep_batch, sleep
         time.sleep(sleep_epoch)
 
     return 0
+
+
+def run_remain(sniffer, batch_size, total_size, remain_json, save_path, sleep_batch, sleep_url, sleep_epoch):
+
+    logger.info('Sniff remain.')
+    keys = remain_json.keys()
+    for epoch in range(total_size // batch_size):
+        for key in keys:
+            for batch in range(batch_size):
+                if remain_json[key] == 100:
+                    break
+                directory_name = make_batch_dir(save_path, url, epoch, batch)
+                logger.info('Batch - [%d/%d] - Epoch - [%d/%d] - URL - %s' % (batch, batch_size, epoch, total_size // batch_size, url))
+                sniffer.sniff(url, directory_name)
+                remain_json[key] += 1
+                time.sleep(sleep_batch)
+            time.sleep(sleep_url)
+        time.sleep(sleep_epoch)
 
 
 def main():
