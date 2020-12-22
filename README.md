@@ -86,6 +86,7 @@ total_size=total size per url
 sleep_batch=sleep between batch
 sleep_url=sleep between url
 sleep_epoch=sleep between epoch
+black_count=some website exceed black_count then sniffer refuse to connect that website
 
 [Logger]
 file_name=log file name if log type is file or both 
