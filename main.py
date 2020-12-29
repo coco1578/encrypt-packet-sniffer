@@ -115,13 +115,13 @@ def run_remain(sniffer, batch_size, total_size, remain_json, save_path, sleep_ba
     logger.info('Sniff remain.')
     keys = remain_json.keys()
     for epoch in range(total_size // batch_size):
-        for key in keys:
+        for key in keys: # url
             for batch in range(batch_size):
                 if remain_json[key] == 100:
                     break
-                directory_name = make_batch_dir(save_path, url, epoch, batch)
-                logger.info('Batch - [%d/%d] - Epoch - [%d/%d] - URL - %s' % (batch, batch_size, epoch, total_size // batch_size, url))
-                sniffer.sniff(url, directory_name)
+                directory_name = make_batch_dir(save_path, key, epoch, batch)
+                logger.info('Batch - [%d/%d] - Epoch - [%d/%d] - URL - %s' % (batch, batch_size, epoch, total_size // batch_size, key))
+                sniffer.sniff(key, directory_name)
                 remain_json[key] += 1
                 time.sleep(sleep_batch)
             time.sleep(sleep_url)
