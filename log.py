@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import configparser
 
@@ -72,7 +73,10 @@ class Logger:
 
 
 parser = configparser.ConfigParser()
-parser.read('config.ini')
+if sys.platform == 'linux' or sys.platform == 'darwin':
+    parser.read('./config.ini')
+else:
+    parser.read('config.ini')
 log_dir = parser['Logger']['log_dir']
 file_name = parser['Logger']['file_name']
 log_type = parser['Logger']['log_type']
