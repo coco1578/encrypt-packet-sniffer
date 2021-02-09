@@ -135,8 +135,12 @@ class TorBrowser:
 
     def _init_profile(self):
 
+        self.profile.set_preference('browser.cache.disk.enable', False)
+        self.profile.set_preference('browser.cache.memory.enable', False)
+        self.profile.set_preference('browser.cache.offline.enable', False)
         self.profile.set_preference('browser.startup.page', '0')
         self.profile.set_preference('browser.startup.homepage', 'about:newtab')
+        self.profile.set_preference('network.http.use-cache', False)
         self.profile.set_preference('network.proxy.type', 1)
         self.profile.set_preference('network.proxy.socks', '127.0.0.1')
         self.profile.set_preference('network.proxy.socks_port', self.socks_port)
