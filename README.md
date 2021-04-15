@@ -16,7 +16,7 @@ Tor==0.4.2.7
 
 Tor Browser Bundle==10.0.5 [Download Link](https://archive.torproject.org/tor-package-archive/torbrowser/10.0.5/tor-browser-linux64-10.0.5_en-US.tar.xz)
 
-geckodriver==0.28.0 [Download Link]([https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz](https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz))
+geckodriver==0.28.0 [Download Link](https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz)
 
 python3.6
 - selenium==3.141.0
