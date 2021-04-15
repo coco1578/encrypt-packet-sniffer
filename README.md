@@ -49,8 +49,8 @@ Wireshark
     - After extract it, you can see there is a `geckodriver` file.
     - In terminal enter this code to use it everywhere. `mv geckodriver /usr/local/bin`
 
-5. clone `SnifferyEncryptedPacket` repository
-    - `git clone https://github.com/coco1578/SnifferEncryptedPacket`
+5. clone `encrypt-packet-sniffer` repository
+    - `git clone https://github.com/coco1578/encrypt-packet-sniffer`
 
 6. Configure Ubuntu environment
     - **To capture pure encyrpted packet** we need to remove background network traffic.
