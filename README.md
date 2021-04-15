@@ -58,7 +58,8 @@ Wireshark
     - Recommend to change MTU size 1500 `sudo ifconfig <network interface> mut 1500`
 
 **Important Setup (Only works on remote session)**
-- When you are using remote session, Add `export DISPLAY=:0` in `bashrc`.
+- `xauth list` command in the terminal and you will get the `salmon21-S2600WFT/unix:10  MIT-MAGIC-COOKIE-1  549d72b05d2e197d4aa009ab4de3ff46` for example
+- Then, Add `export DISPLAY=:number in the xauth list` in `bashrc`. and `source ~/.bashrc`
 
 
 ## Usage
